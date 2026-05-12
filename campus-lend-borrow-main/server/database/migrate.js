@@ -5,7 +5,7 @@ import pool from "../config/db.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-async function migrate() {
+export async function migrateDatabase() {
   const sql = readFileSync(join(__dirname, "schema.sql"), "utf8");
   try {
     await pool.query(sql);
@@ -13,9 +13,11 @@ async function migrate() {
   } catch (err) {
     console.error("❌ Migration failed:", err.message);
     throw err;
-  } finally {
-    await pool.end();
   }
 }
 
-migrate();
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+  migrateDatabase()
+    .finally(() => pool.end())
+    .catch(() => process.exit(1));
+}

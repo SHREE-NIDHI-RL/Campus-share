@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import pool from "../config/db.js";
+import { fileURLToPath } from "url";
 
 const hash = (p) => bcrypt.hashSync(p, 10);
 
@@ -68,17 +69,27 @@ const RESOURCES = [
   { ownerIdx: 11, title: "GRE Prep — Official ETS + Magoosh", description: "Official GRE guide (3rd ed), Magoosh vocab flashcards (500 cards), Manhattan 5lb practice book.", category: "Exam Prep", image_url: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=400&h=300&fit=crop", listing_type: "both", rent_price: 18, buy_price: 480, status: "available", views_count: 112, request_count: 8 },
 ];
 
-async function seed() {
+export async function seedDatabase({ force = false, closePool = false } = {}) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
 
-    // Clear existing data
-    await client.query("DELETE FROM notifications");
-    await client.query("DELETE FROM ratings");
-    await client.query("DELETE FROM borrow_requests");
-    await client.query("DELETE FROM resources");
-    await client.query("DELETE FROM users");
+    const { rows: resourceCountRows } = await client.query("SELECT COUNT(*)::int AS count FROM resources");
+    const existingResourceCount = resourceCountRows[0]?.count || 0;
+
+    if (!force && existingResourceCount > 0) {
+      await client.query("ROLLBACK");
+      return { seeded: false, reason: "already-populated" };
+    }
+
+    if (force) {
+      // Clear existing data only when explicitly resetting the database.
+      await client.query("DELETE FROM notifications");
+      await client.query("DELETE FROM ratings");
+      await client.query("DELETE FROM borrow_requests");
+      await client.query("DELETE FROM resources");
+      await client.query("DELETE FROM users");
+    }
 
     // Insert users
     const userIds = [];
@@ -220,14 +231,19 @@ async function seed() {
     console.log("📧 Login credentials (all users): password = Campus@123");
     console.log("👤 Admin: admin@campus.edu / Campus@123");
     console.log("👤 Student: arjun.mehta@campus.edu / Campus@123");
+    return { seeded: true };
   } catch (err) {
     await client.query("ROLLBACK");
     console.error("❌ Seed failed:", err.message);
     throw err;
   } finally {
     client.release();
-    await pool.end();
+    if (closePool) {
+      await pool.end();
+    }
   }
 }
 
-seed();
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+  seedDatabase({ force: true, closePool: true }).catch(() => process.exit(1));
+}
