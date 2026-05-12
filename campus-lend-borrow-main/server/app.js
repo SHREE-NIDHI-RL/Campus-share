@@ -17,8 +17,8 @@ dotenv.config();
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
 
-// CORS
-app.use(cors({
+// CORS (API routes only)
+app.use("/api", cors({
   origin: (origin, callback) => {
     const allowedOrigins = [
       "http://localhost:8080",

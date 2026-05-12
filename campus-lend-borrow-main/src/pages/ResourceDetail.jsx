@@ -24,7 +24,8 @@ import { useAuth } from "@/context/AuthContext";
 import { ratingService } from "@/services/adminService";
 import { toast } from "@/components/ui/sonner";
 
-const BASE = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_URL || "/api";
+const BASE = API_URL.startsWith("http") ? API_URL.replace(/\/api\/?$/, "") : "";
 
 const fmtDate = (d) =>
   d ? new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—";

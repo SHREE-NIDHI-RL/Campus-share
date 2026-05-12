@@ -5,6 +5,9 @@ import FilterSidebar from "@/components/FilterSidebar";
 import ResourceCard from "@/components/ResourceCard";
 import { resourceService } from "@/services/resourceService";
 
+const API_URL = import.meta.env.VITE_API_URL || "/api";
+const UPLOAD_BASE = API_URL.startsWith("http") ? API_URL.replace(/\/api\/?$/, "") : "";
+
 // Normalise API resource shape → card shape
 const toCard = (r) => ({
   id: r.id,
@@ -12,7 +15,7 @@ const toCard = (r) => ({
   category: r.category,
   image: r.image_url
     ? r.image_url.startsWith("/uploads")
-      ? `${(import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace("/api", "")}${r.image_url}`
+      ? `${UPLOAD_BASE}${r.image_url}`
       : r.image_url
     : "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=300&fit=crop",
   status: r.status,
