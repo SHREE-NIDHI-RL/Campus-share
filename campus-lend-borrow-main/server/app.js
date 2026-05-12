@@ -52,10 +52,13 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/users", userRoutes);
 
 // Health check
-app.get("/api/health", (req, res) => res.json({ status: "ok", timestamp: new Date() }));
+app.get("/api/health", (req, res) => res.json({ status: "ok", timestamp: new Date() })
+// Serve React frontend
+app.use(express.static(join(__dirname, "../dist")));
 
-// 404
-app.use((req, res) => res.status(404).json({ message: "Route not found" }));
+app.get("*", (req, res) => {
+  res.sendFile(join(__dirname, "../dist/index.html"));
+});
 
 // Global error handler
 app.use((err, req, res, next) => {
