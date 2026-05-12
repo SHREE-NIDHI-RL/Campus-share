@@ -24,11 +24,15 @@ app.use("/api", cors({
       "http://localhost:8080",
       "http://localhost:8081",
       "http://localhost:3000",
-      process.env.CLIENT_URL
+      process.env.CLIENT_URL,
+      process.env.RENDER_EXTERNAL_URL,
     ].filter(Boolean);
-    if (!origin || allowedOrigins.includes(origin)) {
+
+    const isAllowedRenderOrigin = /^https:\/\/.+\.onrender\.com$/i.test(origin || "");
+    if (!origin || allowedOrigins.includes(origin) || isAllowedRenderOrigin) {
       callback(null, true);
     } else {
+      console.error(`CORS blocked origin: ${origin}`);
       callback(new Error("Not allowed by CORS"));
     }
   },
